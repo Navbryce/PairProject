@@ -1,6 +1,12 @@
+import javax.swing.JFrame;
+
 
 public class Window {
-
+	public JFrame frame;
+	public Window() {
+		frame = new JFrame();
+	}
+	
 	private static void runGUI() {
 		Snake snake = new Snake();		
 	}
