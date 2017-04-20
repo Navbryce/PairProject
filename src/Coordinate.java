@@ -23,6 +23,13 @@ public class Coordinate {
 		return yVal;
 	}
 	
+	public boolean equals(Coordinate point) {
+		if(point.getX() != getX() || point.getY() != getY()) {
+			return false;
+		} 
+		return true;
+	}
+	
 	public String toString() {
 		return "(" + xVal + ", " + yVal + ")";
 	}
