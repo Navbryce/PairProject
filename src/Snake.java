@@ -16,7 +16,7 @@ import javax.swing.*;
 
 
 public class Snake extends Game implements ActionListener{
-	private JFrame frame;
+	//private JFrame frame;
 	private JPanel mainPanel;
 	private JGridPanel grid;
 	private JLabel score;
@@ -24,21 +24,25 @@ public class Snake extends Game implements ActionListener{
 	private ArrayList<String> dirs;
 	private Coordinate food;
 	private String dir;
+	//1200x720
 	private int cellSide = 25;
-	private int gridSide = 20;
-	private Timer timer;
-	private int speed = 200;
+	private int gridWidth = 47;
+	private int gridHeight = 26;
+	public Timer timer;
+	private int speed = 100;
 	private boolean dead = false;
 	
 	public Snake() {
-		frame = new JFrame();
+		//frame = new JFrame();
 		mainPanel = new JPanel();
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 		mainPanel.setLayout(new GridBagLayout());
+		mainPanel.setBackground(Color.white);
 		
 		GridBagConstraints gbc = new GridBagConstraints();
 		
-		score = new JLabel("score");
+		score = new JLabel("length: 0");
+		score.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		mainPanel.add(score, gbc);
@@ -46,14 +50,14 @@ public class Snake extends Game implements ActionListener{
 		grid = new JGridPanel();
 		gbc.gridx = 0;
 		gbc.gridy = 1;
-		grid.setPreferredSize(new Dimension(gridSide*cellSide, gridSide*cellSide));
-
+		grid.setPreferredSize(new Dimension(gridWidth*cellSide+1, gridHeight*cellSide+1));
+		grid.setBackground(Color.white);
 		
 		generateFood();
 		
 		int xVal = 0, yVal = 0;
-		xVal = (int)(Math.random()*(gridSide-1))+1;
-		yVal = (int)(Math.random()*gridSide);
+		xVal = (int)(Math.random()*(gridWidth-1))+1;
+		yVal = (int)(Math.random()*gridHeight);
 		snake = new ArrayList<Coordinate>();
 		snake.add(new Coordinate(xVal, yVal));
 		
@@ -102,15 +106,16 @@ public class Snake extends Game implements ActionListener{
 		
 		mainPanel.add(grid, gbc);
 		
-		timer = new Timer(speed, this);
-		timer.setInitialDelay(500);
-		timer.start(); 
 		
-		frame.setTitle("Snake");
+		
+		this.add(mainPanel);
+		/*frame.setTitle("Snake");
 		frame.setContentPane(mainPanel);
+		frame.setResizable(false);
 		frame.setVisible(true);
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		*/
 		
 		
 	}
@@ -128,19 +133,22 @@ public class Snake extends Game implements ActionListener{
 					}
 				}
 				//not dead, grow!
-				snake.add(0, next);
-				if(!snake.get(0).equals(food)) { //eat food
-					snake.remove(snake.get(snake.size()-1));
-				} else {
-					generateFood();
+				if(!dead) {
+					snake.add(0, next);
+					if(!snake.get(0).equals(food)) { //eat food
+						snake.remove(snake.get(snake.size()-1));
+					} else {
+						generateFood();
+					}
+					grid.repaint();
 				}
-				grid.repaint();
+				
 			} else { //outside of grid death
 				death();
-				System.out.println("DEAD");
+				
 			}
 		} else if(dir.equals("right")) {
-			if(snake.get(0).getX() < gridSide-1) {
+			if(snake.get(0).getX() < gridWidth-1) {
 				Coordinate next = new Coordinate(snake.get(0).getX()+1, snake.get(0).getY());
 				//eat self death
 				for(Coordinate coord : snake) {
@@ -149,17 +157,17 @@ public class Snake extends Game implements ActionListener{
 					}
 				}
 				//not dead, grow!
-				snake.add(0, next);
-				
-				if(!snake.get(0).equals(food)) {
-					snake.remove(snake.get(snake.size()-1));
-				} else {
-					generateFood();
+				if(!dead) {
+					snake.add(0, next);
+					if(!snake.get(0).equals(food)) { //eat food
+						snake.remove(snake.get(snake.size()-1));
+					} else {
+						generateFood();
+					}
+					grid.repaint();
 				}
-				grid.repaint();
 			} else {
 				death();
-				System.out.println("DEAD");
 			}
 		} else if(dir.equals("up")) {
 			if(snake.get(0).getY() > 0) {
@@ -171,20 +179,20 @@ public class Snake extends Game implements ActionListener{
 					}
 				}
 				//not dead, grow!
-				snake.add(0, next);
-				
-				if(!snake.get(0).equals(food)) {
-					snake.remove(snake.get(snake.size()-1));
-				} else {
-					generateFood();
+				if(!dead) {
+					snake.add(0, next);
+					if(!snake.get(0).equals(food)) { //eat food
+						snake.remove(snake.get(snake.size()-1));
+					} else {
+						generateFood();
+					}
+					grid.repaint();
 				}
-				grid.repaint();
 			} else {
 				death();
-				System.out.println("DEAD");
 			}
 		} else if(dir.equals("down")) {
-			if(snake.get(0).getY() < gridSide-1) {
+			if(snake.get(0).getY() < gridHeight-1) {
 				Coordinate next = new Coordinate(snake.get(0).getX(), snake.get(0).getY()+1);
 				//eat self death
 				for(Coordinate coord : snake) {
@@ -193,34 +201,34 @@ public class Snake extends Game implements ActionListener{
 					}
 				}
 				//not dead, grow!
-				snake.add(0, next);
-				
-				if(!snake.get(0).equals(food)) {
-					snake.remove(snake.get(snake.size()-1));
-				} else {
-					generateFood();
+				if(!dead) {
+					snake.add(0, next);
+					if(!snake.get(0).equals(food)) { //eat food
+						snake.remove(snake.get(snake.size()-1));
+					} else {
+						generateFood();
+					}
+					grid.repaint();
 				}
-				grid.repaint();
 			} else {
 				death();
-				System.out.println("DEAD");
 			}
-		} else {
-			System.out.println("ERROR; DIR CODE");
-		}
+		} 
 		
 	}
 	
 	private void death() {
+		score.setText("GAME OVER. Final Length: " + snake.size());
 		timer.stop();
-		System.out.println("DEAD! End game.");
-		score.setText("GAME OVER. Final Length: ");
+		dead = true;	
 		
 	}
 	
 	public boolean run() {
 		
-		
+		timer = new Timer(speed, this);
+		timer.setInitialDelay(500);
+		timer.start();
 		return false;
 	}
 	
@@ -231,8 +239,8 @@ public class Snake extends Game implements ActionListener{
 		
 		boolean clean = false;
 		while(!clean) {
-			xVal = (int)(Math.random()*gridSide);
-			yVal = (int)(Math.random()*gridSide);
+			xVal = (int)(Math.random()*gridWidth);
+			yVal = (int)(Math.random()*gridHeight);
 			
 			food = new Coordinate(xVal, yVal);
 			
@@ -257,8 +265,8 @@ public class Snake extends Game implements ActionListener{
 	private class JGridPanel extends JPanel {
 		
 		public JGridPanel(){}
-		 
-		//FIX: SET GRID TO 10X10 
+
+
 		public void paint(Graphics g) {			
 			Graphics2D g2 = (Graphics2D) g;
 			super.paintComponent(g2);
@@ -287,8 +295,8 @@ public class Snake extends Game implements ActionListener{
 			if(snake==null) {
 				//assign random
 				int xVal = 0, yVal = 0;
-				xVal = (int)(Math.random()*gridSide);
-				yVal = (int)(Math.random()*gridSide);
+				xVal = (int)(Math.random()*gridWidth);
+				yVal = (int)(Math.random()*gridHeight);
 				snake = new ArrayList<Coordinate>();
 				snake.add(new Coordinate(xVal, yVal));
 			}
@@ -300,6 +308,12 @@ public class Snake extends Game implements ActionListener{
 				g2.fill(snakeBox);
 				g2.setColor(Color.white);
 				g2.draw(snakeBox);
+			}
+			
+			if(!dead) {
+				score.setText("length: " + snake.size());
+			} else {
+				score.setText("GAME OVER. Final Length: " + snake.size());
 			}
 			
 		}
