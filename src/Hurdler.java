@@ -27,10 +27,12 @@ public class Hurdler extends JPanel{
     private int runnerY;
     private int speed; //Speed of objects and track
     private Timer timer;
+    private int width;
+    private int height;
 
     public Hurdler(){
-        int width=1200;
-        int height=720;
+        width=1200;
+        height=720;
 
         this.setPreferredSize(new Dimension(width, height));
         this.setLayout(new GridLayout(1, 0, 0, 0));
@@ -196,7 +198,7 @@ public class Hurdler extends JPanel{
         int randomNumber = random.nextInt(maxBound);
 
         int numberOfHurdles = hurdles.size();
-        int minimumSpaceBetweenHurdles = runnerLabel.getWidth() + hurdleWidth; //aside from two hurdles place direclty next to eachother. + iconwidth because distance is measured from left corner to left corner
+        int minimumSpaceBetweenHurdles = runnerLabel.getWidth() + hurdleWidth + 50; //aside from two hurdles place direclty next to eachother. + iconwidth because distance is measured from left corner to left corner
         int locationOfMostRecentHurdle=-1;
         int locationOfSecondMostRecentHurdle=-12;
         if(numberOfHurdles>0){
@@ -206,7 +208,7 @@ public class Hurdler extends JPanel{
             }
         }
 
-        if(randomNumber==0 && (numberOfHurdles==0 || (locationOfMostRecentHurdle<getWidth()-minimumSpaceBetweenHurdles) || (speed>8 && hurdles.size()>1 && locationOfMostRecentHurdle>=getWidth()-hurdleWidth-10) && (locationOfMostRecentHurdle-locationOfSecondMostRecentHurdle>=minimumSpaceBetweenHurdles))){ //Generates hurdles randomly--only when a 0 is returned by the random
+        if(randomNumber==0 && (numberOfHurdles==0 || (locationOfMostRecentHurdle<getWidth()-minimumSpaceBetweenHurdles) || (speed>8 && hurdles.size()>1 && locationOfMostRecentHurdle>=getWidth()-hurdleWidth-50) && (locationOfMostRecentHurdle-locationOfSecondMostRecentHurdle>=minimumSpaceBetweenHurdles))){ //Generates hurdles randomly--only when a 0 is returned by the random
             ParsedImageIcon hurdleImage = new ParsedImageIcon(".\\Hurdler\\hurdle.png", hurdleWidth, hurdleHeight);
             JLabel hurdleLabel = new JLabel(hurdleImage);
             hurdleLabel.setSize(hurdleImage.getIconWidth(), hurdleImage.getIconHeight());

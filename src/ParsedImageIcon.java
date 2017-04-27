@@ -1,6 +1,9 @@
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -74,5 +77,28 @@ public class ParsedImageIcon extends ImageIcon{
 		}
 		setWidth(newWidth);
 		setHeight(newHeight);
+	}
+	public void setAlpha(int newAlpha){
+		Image image = this.getImage();
+		int width = this.getIconWidth();
+		int height = this.getIconHeight();
+		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = bufferedImage.createGraphics();
+		graphics.drawImage(image, 0, 0, null);
+		for(int xPixel=0; xPixel<width; xPixel++){
+			for(int yPixel=0; yPixel<height; yPixel++){
+				Color color = new Color(bufferedImage.getRGB(xPixel, yPixel), true); //getRGB returns series of numbers representative  of a color. New Color converts it into RGB format
+				int r = color.getRed();
+				int g = color.getGreen();
+				int b = color.getBlue();
+				int a = color.getAlpha();
+				if(a!=0){
+					a=newAlpha;
+				}
+				color = new Color(r, g, b, a);
+				bufferedImage.setRGB(xPixel, yPixel, color.getRGB());
+			}
+		}
+		this.setImage(bufferedImage);
 	}
 }
