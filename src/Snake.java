@@ -16,6 +16,7 @@ import javax.swing.*;
 
 
 public class Snake extends Game implements ActionListener{
+	private Window window;
 	//private JFrame frame;
 	private JPanel mainPanel;
 	private JGridPanel grid;
@@ -31,9 +32,34 @@ public class Snake extends Game implements ActionListener{
 	public Timer timer;
 	private int speed = 100;
 	private boolean dead = false;
+	private int lvl;
 	
-	public Snake() {
+	public Snake(Window wind, int level) {
+		window = wind;
 		//frame = new JFrame();
+		lvl = level;
+		if(level==0) {
+			speed=200;
+			cellSide=35;
+			gridWidth=34;
+			gridHeight=18;
+		} else if(level==1) {
+			speed=150;
+			cellSide=30;
+			gridWidth=39;
+			gridHeight=23;
+		} else if(level==2) {
+			speed=100;
+			cellSide=25;
+			gridWidth=47;
+			gridHeight=28;
+		} else if(level==3) {
+			speed=50;
+			cellSide=20;
+			gridWidth=59;
+			gridHeight=25;
+		}
+		
 		mainPanel = new JPanel();
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 		mainPanel.setLayout(new GridBagLayout());
@@ -53,6 +79,7 @@ public class Snake extends Game implements ActionListener{
 		grid.setPreferredSize(new Dimension(gridWidth*cellSide+1, gridHeight*cellSide+1));
 		grid.setBackground(Color.white);
 		
+		
 		generateFood();
 		
 		int xVal = 0, yVal = 0;
@@ -61,7 +88,7 @@ public class Snake extends Game implements ActionListener{
 		snake = new ArrayList<Coordinate>();
 		snake.add(new Coordinate(xVal, yVal));
 		
-		dir = "left";
+		//dir = "left";
 		AbstractAction left = new AbstractAction() {
 			public void actionPerformed(ActionEvent arg0) {
 				//System.out.println("left");
@@ -120,10 +147,13 @@ public class Snake extends Game implements ActionListener{
 		
 	}
 	
+	
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
 		//System.out.println("action");
-		if(dir.equals("left")) {
+		if(dir == null) {
+			
+		} else if(dir.equals("left")) {
 			if(snake.get(0).getX() > 0) {
 				Coordinate next = new Coordinate(snake.get(0).getX()-1, snake.get(0).getY());
 				//eat self death
@@ -213,7 +243,7 @@ public class Snake extends Game implements ActionListener{
 			} else {
 				death();
 			}
-		} 
+		}
 		
 	}
 	
@@ -221,14 +251,41 @@ public class Snake extends Game implements ActionListener{
 		score.setText("GAME OVER. Final Length: " + snake.size());
 		timer.stop();
 		dead = true;	
+		System.out.println(lvl);
+		System.out.println("Score: " + snake.size()*(lvl+1) );
+		int input = JOptionPane.showConfirmDialog(null,
+				"GAME OVER.\nFinal Score: " + snake.size()*(lvl+1) + "\nReturn to Menu?", "Return to Menu?", JOptionPane.YES_OPTION);
+		if (input == 0) {
+			this.setVisible(false);
+			window.refresh();
+			
+		} else if(input == 1) {
+			//nothing i guess
+		}
+		
 		
 	}
 	
+	private void reset() {
+		snake.clear();
+		int xVal = 0, yVal = 0;
+		xVal = (int)(Math.random()*(gridWidth-1))+1;
+		yVal = (int)(Math.random()*gridHeight);
+		snake = new ArrayList<Coordinate>();
+		snake.add(new Coordinate(xVal, yVal));
+		
+		generateFood();
+
+		repaint();
+	}
+	
 	public boolean run() {
+		reset();
 		
 		timer = new Timer(speed, this);
-		timer.setInitialDelay(500);
+		timer.setInitialDelay(1000);
 		timer.start();
+		
 		return false;
 	}
 	
@@ -256,7 +313,7 @@ public class Snake extends Game implements ActionListener{
 			}
 			
 		}
-		System.out.println(new Coordinate(xVal, yVal));
+		//System.out.println(new Coordinate(xVal, yVal));
 		
 		//grid.repaint();
 		//grid.makeFood(food);
