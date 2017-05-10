@@ -9,13 +9,15 @@ public class Weapon {
 	private int delay;
 	private ParsedImageIcon weaponImage;
 	private int reloadDelay;
-	public Weapon(int clipSize, int fireTypeValue, int delayTime, int reloadTime, ParsedImageIcon image){
+	private int bullets;
+	public Weapon(int clipSize, int fireTypeValue, int delayTime, int reloadTime, int totalBullets, ParsedImageIcon image){
 		magazineSize = clipSize;
 		bulletsLeftInClip=clipSize;
 		fireType = fireTypeValue;
 		weaponImage=image;
 		delay=delayTime;
 		reloadDelay=reloadTime;
+		bullets=totalBullets;
 		
 	}
 	public ParsedImageIcon getImage(){
@@ -48,8 +50,16 @@ public class Weapon {
 	public void setBulletsLeftInClip(int bullets){
 		bulletsLeftInClip=bullets;
 	}
-	public void reload(){
-		bulletsLeftInClip=magazineSize;
+	public void reload() throws Exception{
+		if(bullets<=0){
+			throw new Exception();
+		}else{
+			if(bullets>=magazineSize){
+				bulletsLeftInClip=magazineSize;
+			}else{
+				bulletsLeftInClip=bullets;
+			}
+		}
 	}
 	public boolean needToReload(){
 		boolean reload=false;
@@ -59,10 +69,11 @@ public class Weapon {
 		return reload;
 	}
 	public void fire() throws Exception{
-		if(bulletsLeftInClip<=0){
+		if(bulletsLeftInClip<=0 && bullets<=0){
 			throw new Exception();
 		}else{
 			bulletsLeftInClip--;
+			bullets--;
 		}
 	}
 	public int getReloadDelay(){
@@ -72,9 +83,15 @@ public class Weapon {
 		reloadDelay=reloadTime;
 	}
 	public Weapon replicate(){
-		Weapon returnWeapon = new Weapon(magazineSize, fireType, delay, reloadDelay, weaponImage);
+		Weapon returnWeapon = new Weapon(magazineSize, fireType, delay, reloadDelay, bullets, weaponImage);
 		returnWeapon.setBulletsLeftInClip(bulletsLeftInClip);
 		
 		return returnWeapon;
+	}
+	public void setTotalBullets(int totalBullets){
+		bullets=totalBullets;
+	}
+	public int getTotalBullets(){
+		return bullets;
 	}
 }
