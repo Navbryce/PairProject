@@ -37,6 +37,8 @@ public class ZombieInvasion extends Game{
 	private ArrayList <JLabel> zombieLabels = new ArrayList();
 	private ArrayList <Velocity> zombieVelocities = new ArrayList();
 	private ArrayList <JLabel> bloodLabels = new ArrayList();
+	private ArrayList <JLabel> bulletLabels = new ArrayList();
+	private ArrayList <Double> bulletAlpha = new ArrayList();
 	private ArrayList <Double> bloodAlpha = new ArrayList();
 	private ArrayList <Weapon> weaponList = new ArrayList();
 	private JLabel weaponLabel=new JLabel();
@@ -50,15 +52,28 @@ public class ZombieInvasion extends Game{
 	private double automaticFire = -1;
 	private int reloading = -1;
 	private Timer timer;
+	private ArrayList<JLabel> leftWall = new ArrayList();
+	private ArrayList<JLabel> rightWall = new ArrayList();
+	private ArrayList<JLabel> topWall = new ArrayList();
+	private ArrayList<JLabel> bottomWall = new ArrayList();
+	private ArrayList<JLabel> aestheticWall = new ArrayList();
+	private ArrayList<ArrayList<Double>> wallHealth = new ArrayList();
+	private int wallWidth;
+	private int wallHeight;
+	private boolean gameOver=false;
+
+
 
 	public ZombieInvasion(int difficulty){
 		generateWeaponList();
 		equipWeapon(weaponList.get(0), 0);
-
 		
 		layerPane = new JLayeredPane();
 		layerPane.setSize(1200, 720);
 		layerPane.setPreferredSize(layerPane.getSize());
+		
+		//Wall
+		createWall(); //Also sets wall width and wall height private variables
 		
 		ParsedImageIcon background = new ParsedImageIcon(".\\ZombieInvasion\\background.jpg");
 		JLabel backgroundLabel = new JLabel(background);
@@ -143,7 +158,7 @@ public class ZombieInvasion extends Game{
 		BufferedImage blankCursorImage = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(blankCursorImage, new Point(0, 0), "blank");
 		this.setCursor(blankCursor);
-		
+        		
 		for(int elementCounter=0; elementCounter<(difficulty+1)*15; elementCounter++){
 			spawnZombie();
 		}
@@ -156,7 +171,7 @@ public class ZombieInvasion extends Game{
 				double timerIntervalInSec = (double)timerInterval/1000.0;
 				double second = timerIntervalInSec * timerCounter; 
 				
-				decayBlood();
+				decay();
 				if(automaticFire!=-1 && ((timerCounter-automaticFire)%currentWeapon.getDelay()==0 || timerCounter-automaticFire<2)){ //%5 adds a delay
 					shootingLocation = mainPanel.getMousePosition();
 
@@ -166,10 +181,15 @@ public class ZombieInvasion extends Game{
 				}else if(reloading==0){
 					shootingLocation=null;
 					automaticFire=-1;
-					currentWeapon.reload();
+					try {
+						currentWeapon.reload();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					reloadText.setVisible(false);
 					reloading=-1;
-					setAmmoLabel(currentWeapon.getBulletsLeftInClip(), currentWeapon.getMagazineSize());
+					setAmmoLabel(currentWeapon.getBulletsLeftInClip(), currentWeapon.getTotalBullets());
 					reloadText.setText("You need to reload. Press R.");
 					reloadText.setSize(reloadText.getPreferredSize());
 					reloadText.setLocation((int)(layerPane.getWidth()/2.0- reloadText.getWidth()/2.0), (int)(layerPane.getHeight()/2.0 - reloadText.getHeight()));
@@ -177,14 +197,19 @@ public class ZombieInvasion extends Game{
 
 				}
 				if(currentWeapon.needToReload()){
-					if(!reloadText.isVisible()){
+					if(currentWeapon.getTotalBullets()<=0){
+						outOfAmmo();
+	
+					}
+					if(!reloadText.isVisible()){ //Will set the reload text label to visible if the gun needs to be reloaded or if the gun runs out of ammo
 						reloadText.setVisible(true);
 					}
+
 				}else if(shootingLocation!=null){
 					shoot((int)shootingLocation.getX(), (int)shootingLocation.getY());
 					try {
 						currentWeapon.fire();
-						setAmmoLabel(currentWeapon.getBulletsLeftInClip(), currentWeapon.getMagazineSize());
+						setAmmoLabel(currentWeapon.getBulletsLeftInClip(), currentWeapon.getTotalBullets());
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						System.out.println("Tried to shoot an ureloaded weapon.");
@@ -202,15 +227,15 @@ public class ZombieInvasion extends Game{
 		};
 		//Weapon Panel GUI
 		JPanel weaponPanel = new JPanel();
-		weaponPanel.setSize(400,200);
+		weaponPanel.setSize(400,125);
 		weaponPanel.setOpaque(false);
-		weaponPanel.setPreferredSize(new Dimension(400, 200));
+		weaponPanel.setPreferredSize(new Dimension(400, 125));
 		weaponPanel.setLayout(new GridBagLayout());
 		weaponPanel.setLocation(layerPane.getWidth()-weaponPanel.getWidth(), layerPane.getHeight()-weaponPanel.getHeight());
 		weaponPanel.add(weaponLabel);
 		GridBagConstraints ammoLabelConstraints = new GridBagConstraints();
 		ammoLabelConstraints.gridy=1;
-		ammoLabel.setFont(new Font("Lucida Console", Font.BOLD, 45));
+		ammoLabel.setFont(new Font("Lucida Console", Font.BOLD, 40));
 		ammoLabel.setForeground(Color.WHITE);
 		weaponPanel.add(ammoLabel, ammoLabelConstraints);
 		
@@ -230,7 +255,7 @@ public class ZombieInvasion extends Game{
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				if(currentWeapon.getBulletsLeftInClip()!=currentWeapon.getMagazineSize() && reloading==-1){
+				if(currentWeapon.getBulletsLeftInClip()!=currentWeapon.getMagazineSize() && reloading==-1 && currentWeapon.getTotalBullets()>0){
 					reloading=currentWeapon.getReloadDelay();
 					reloadText.setText("Reloading...");
 					reloadText.setVisible(true);
@@ -248,6 +273,9 @@ public class ZombieInvasion extends Game{
         this.getActionMap().put("reloadWeapon", reloadAction);
         
         setWeaponBindings();
+        
+
+
         
         
 		
@@ -278,25 +306,38 @@ public class ZombieInvasion extends Game{
 		frame.pack();
 	}
 	public void spawnZombie(){
-		int maxVelocity=10;
-		int minVelocity=0;
-		ParsedImageIcon zombie = new ParsedImageIcon(".\\ZombieInvasion\\zombie.gif");
+		int maxVelocity=28;
+		int minVelocity=10;
+		ParsedImageIcon zombie = new ParsedImageIcon(".\\ZombieInvasion\\zombie.png");
 		JLabel zombieLabel = new JLabel(zombie);
 		zombieLabel.setSize(zombie.getIconWidth(), zombie.getIconHeight());
 		
+
+		
+		Velocity velocity = new Velocity(minVelocity, maxVelocity);
+		
+		rotateZombie(zombieLabel, velocity);
+		
 		Random randomNumber = new Random();
-		int x = randomNumber.nextInt(layerPane.getWidth()-zombie.getIconWidth());
-		int y = randomNumber.nextInt(layerPane.getHeight()-zombie.getIconHeight());
+		int xMax = layerPane.getWidth()-wallWidth-zombie.getIconWidth();
+		int xMin = wallWidth;
+		
+		int yMax = layerPane.getHeight()-wallHeight-zombie.getIconHeight();
+		int yMin=wallHeight;
+	
+		int x = xMin + randomNumber.nextInt(xMax-xMin);
+		int y = yMin + randomNumber.nextInt(yMax-yMin);
+
+
 		
 		zombieLabel.setLocation(x, y);
 		
-		Velocity velocity = new Velocity();
-		
 		zombieLabels.add(zombieLabel);
 		zombieVelocities.add(velocity);
-
 		
-		layerPane.add(zombieLabel, new Integer(2));
+		layerPane.add(zombieLabel, new Integer(7));
+		
+		layerPane.repaint();
 		
 	}
 	public void moveZombies(double timerIntervalInSec){
@@ -314,22 +355,47 @@ public class ZombieInvasion extends Game{
 			int newX = (int)(((double)velocityX)*timerIntervalInSec*metersToPixel) + currentX;
 			int newY = (int)(((double)velocityY)* timerIntervalInSec * metersToPixel) + currentY;
 			
-			if(newX<=0 || newX>getWidth()-zombieLabel.getWidth()){
-				velocityX = velocityX*-1;
-				zombieVelocity.setVelocityX(velocityX);
-				newX = (int)(((double)velocityX)*timerIntervalInSec*metersToPixel) + currentX;
-			}
-			if(newY<0 || newY>getHeight()-zombieLabel.getHeight()){
-				velocityY = velocityY*-1;
-				zombieVelocity.setVelocityY(velocityY);
-				newY = (int)(((double)velocityY)* timerIntervalInSec * metersToPixel) + currentY;
+			if(!gameOver){
+				if(newX<=wallWidth || newX>layerPane.getWidth()-wallWidth-zombieLabel.getWidth()){
+					int wallIndex = getWallHitIndex(newY, wallHeight);
 
+					if(newX<=wallWidth){
+						decayWall(wallHealth.get(0), leftWall.get(wallIndex), wallIndex);
+					}else{
+						decayWall(wallHealth.get(1), rightWall.get(wallIndex), wallIndex);
+					}
+					velocityX = velocityX*-1;
+					zombieVelocity.setVelocityX(velocityX);
+					rotateZombie(zombieLabel, zombieVelocity);
+					newX = (int)(((double)velocityX)*timerIntervalInSec*metersToPixel) + currentX;
+		
+				}
+				if(newY<wallHeight || newY>layerPane.getHeight()-wallHeight-zombieLabel.getHeight()){
+					int wallIndex = getWallHitIndex(newX, wallWidth)-1; //Because the first tile is on the side wall. Only works because tiles are square.
+
+					if(newY<=wallHeight){
+						decayWall(wallHealth.get(2), topWall.get(wallIndex), wallIndex);
+					}else{
+						decayWall(wallHealth.get(3), bottomWall.get(wallIndex), wallIndex);
+					}
+					
+					velocityY = velocityY*-1;
+					zombieVelocity.setVelocityY(velocityY);
+					rotateZombie(zombieLabel, zombieVelocity);
+					newY = (int)(((double)velocityY)* timerIntervalInSec * metersToPixel) + currentY;
+
+				}
 			}
+			
 			zombieLabel.setLocation(newX, newY);
+			
+
+
 		}
 	}
 	
 	public void shoot(int x, int y){
+		boolean hit = false;
 		for(int zombieCounter=0; zombieCounter<zombieLabels.size(); zombieCounter++){
 			JLabel zombieLabel = zombieLabels.get(zombieCounter);
 			int zombieX = zombieLabel.getX();
@@ -345,8 +411,12 @@ public class ZombieInvasion extends Game{
 					zombieVelocities.remove(zombieCounter);
 					zombieCounter--;
 					mainPanel.repaint();
+					hit=true;
 				}
 			}
+		}
+		if(!hit){
+			bulletHole(x, y);
 		}
 		
 	}
@@ -357,12 +427,12 @@ public class ZombieInvasion extends Game{
 		int zombieHeight = zombieLabel.getHeight();
 		int bloodWidth;
 		int bloodHeight;
-		int bloodType = new Random().nextInt(2);
+		int bloodType = new Random().nextInt(5);
 		ParsedImageIcon bloodImage;
 		if(bloodType==0){
-			bloodImage = new ParsedImageIcon(".\\ZombieInvasion\\blood0.png");
-		}else{
 			bloodImage = new ParsedImageIcon(".\\ZombieInvasion\\blood1.png");
+		}else{
+			bloodImage = new ParsedImageIcon(".\\ZombieInvasion\\blood0.png");
 
 		}
 		JLabel blood = new JLabel(bloodImage);
@@ -383,7 +453,7 @@ public class ZombieInvasion extends Game{
 		blood.setForeground(new Color(255, 255, 255, 255));
 		
 	}
-	public void decayBlood(){
+	public void decay(){
 		double bloodDecayFactor=.2*timerInterval;
 		
 		for(int bloodCounter=0; bloodCounter<bloodLabels.size(); bloodCounter++){
@@ -402,15 +472,31 @@ public class ZombieInvasion extends Game{
 			}
 			
 		}
+		for(int bulletLabelCounter=0; bulletLabelCounter<bulletLabels.size(); bulletLabelCounter++){
+			JLabel bulletLabel = bulletLabels.get(bulletLabelCounter);
+			double currentAlpha = bulletAlpha.get(bulletLabelCounter);
+			
+			double newAlpha = currentAlpha - bloodDecayFactor;
+			
+			if(newAlpha<=0){ //If the bloodlabel will no longer be visible
+				bulletLabels.remove(bulletLabelCounter);
+				bulletAlpha.remove(bulletLabelCounter);
+				layerPane.remove(bulletLabel);
+			}else{
+				bulletAlpha.set(bulletLabelCounter, newAlpha);
+				((ParsedImageIcon)bulletLabel.getIcon()).setAlpha((int)newAlpha);
+			}
+		}
 	}
 	public void generateWeaponList(){
-		weaponList.add(new Weapon(5, Weapon.normalWeapon, 50, 5, new ParsedImageIcon(".\\ZombieInvasion\\sniper.png")));
-		weaponList.add(new Weapon(32, Weapon.automaticWeapon, 25, 100, new ParsedImageIcon(".\\ZombieInvasion\\ak47.png")));
-		weaponList.add(new Weapon(10, Weapon.normalWeapon, 25, 200, new ParsedImageIcon(".\\ZombieInvasion\\shotgun.png")));
+		weaponList.add(new Weapon(5, Weapon.normalWeapon, 50, 5, 20, new ParsedImageIcon(".\\ZombieInvasion\\sniper.png")));
+		weaponList.add(new Weapon(32, Weapon.automaticWeapon, 15, 100, 64, new ParsedImageIcon(".\\ZombieInvasion\\ak47.png")));
+		weaponList.add(new Weapon(10, Weapon.normalWeapon, 25, 200, 30, new ParsedImageIcon(".\\ZombieInvasion\\shotgun.png")));
+		weaponList.add(new Weapon(100, Weapon.automaticWeapon, 3, 300, 150, new ParsedImageIcon(".\\ZombieInvasion\\chainGun.png")));
 
 	}
-	public void setAmmoLabel(int bulletsLeft, int magazineSize){
-		ammoLabel.setText(bulletsLeft  + "/" + magazineSize);
+	public void setAmmoLabel(int bulletsLeft, int totalAmmoLeft){
+		ammoLabel.setText(bulletsLeft  + "/" + (totalAmmoLeft-currentWeapon.getBulletsLeftInClip()));
 	}
 	public void setWeaponLabel(ParsedImageIcon weaponImage){
 		weaponLabel.setIcon(weaponImage);
@@ -419,17 +505,23 @@ public class ZombieInvasion extends Game{
 		//Reset reload and fire (In case weapon was reloading during weapon switch)
 		resetReloadAndFire();
 		
+		//Archives bullet use
 		if(currentWeaponId!=-1 && currentWeapon!=null){
-			weaponList.get(currentWeaponId).setBulletsLeftInClip(currentWeapon.getBulletsLeftInClip());
+			Weapon currentWeaponInList = weaponList.get(currentWeaponId);
+			currentWeaponInList.setBulletsLeftInClip(currentWeapon.getBulletsLeftInClip());
+			currentWeaponInList.setTotalBullets(currentWeapon.getTotalBullets());
 		}
 		//If the new weapon needs to be reloaded
 		if(weapon.getBulletsLeftInClip()==0){
+			if(weapon.getTotalBullets()<=0){
+				outOfAmmo();
+			}
 			reloadText.setVisible(true);
 		}
 		Weapon newWeapon =weapon.replicate();
 		currentWeapon=newWeapon;
 		currentWeaponId=weaponId;
-		setAmmoLabel(newWeapon.getBulletsLeftInClip(), newWeapon.getMagazineSize());
+		setAmmoLabel(newWeapon.getBulletsLeftInClip(), newWeapon.getTotalBullets());
 		setWeaponLabel(newWeapon.getImage());
 		
 	}
@@ -459,12 +551,191 @@ public class ZombieInvasion extends Game{
 		//Because equipweaon is called (which calls this method) is called at the very start of the game, before the reload label is created
 		if(reloadText!=null){
 			reloadText.setVisible(false);
+			reloadText.setForeground(Color.YELLOW);
 			reloadText.setText("You need to reload. Press R.");
 			reloadText.setSize(reloadText.getPreferredSize());
 			reloadText.setLocation((int)(layerPane.getWidth()/2.0- reloadText.getWidth()/2.0), (int)(layerPane.getHeight()/2.0 - reloadText.getHeight()));	
 		}
 
 	}
+	public void outOfAmmo(){
+		reloadText.setText("Weapon out of ammo!");
+		reloadText.setForeground(Color.RED);
+		reloadText.setSize(reloadText.getPreferredSize());
+		reloadText.setLocation((int)(layerPane.getWidth()/2.0- reloadText.getWidth()/2.0), (int)(layerPane.getHeight()/2.0 - reloadText.getHeight()));
+	}
+	
+	//Rotates the zombie from 0 degrees
+	public void rotateZombie(JLabel zombieLabel, Velocity velocity){
+	
+		int velocityX = velocity.getVelocityX();
+		int velocityY = -1*velocity.getVelocityY();
+		double angle;
+		if(velocityX==0){
+			if(velocityY>0){
+				angle=Math.PI/2.0;
+			}else{
+				angle=3.0*Math.PI/2.0;
+			}
+		}else{
+			 angle=(Math.atan((double)velocityY/(double)velocityX));
+		}
+		if(velocityX<0){
+			if(velocityY<0){
+				angle+=Math.PI;
+			}else{
+				angle+=Math.PI;
+			}
+		}
+		
+		ParsedImageIcon zombieIcon = (ParsedImageIcon)zombieLabel.getIcon();
+		Dimension rotatedDimension = zombieIcon.setRotation(angle);
+		zombieLabel.setIcon(zombieIcon);
+		zombieLabel.setSize(rotatedDimension);
+	}
+	public void bulletHole(int x, int y){
+		int width;
+		int height;
+		ParsedImageIcon bulletImage = new ParsedImageIcon(".\\ZombieInvasion\\bullet.png");
+		width = bulletImage.getIconWidth();
+		height = bulletImage.getIconHeight();
+		JLabel bulletLabel = new JLabel(bulletImage);
+		bulletLabel.setSize(width, height);
+		int xPositionOfBullet = x-(int)((double)width/2.0);
+		int yPositionOfBullet = y-(int)((double)height/2.0);
+		bulletLabel.setLocation(xPositionOfBullet, yPositionOfBullet);
+		layerPane.add(bulletLabel, new Integer(6));
+		
+		bulletLabels.add(bulletLabel);
+		bulletAlpha.add(255.0);
+		
+
+	}
+	public void createWall(){
+		int y=0;
+		int width=-1;
+		int height=-1;
+		int sideCounter=0; 
+
+		
+		ArrayList <Double> leftWallHealth = new ArrayList();
+		ArrayList <Double> rightWallHealth = new ArrayList();
+
+		//Create sideWalls
+		while(y<layerPane.getHeight()){
+			ParsedImageIcon wallImage = new ParsedImageIcon(".\\ZombieInvasion\\stoneWall.png");
+			
+			if(y==0){ //Sets the width and height of the walls
+				width = wallImage.getIconWidth();
+				wallWidth=width;
+				height = wallImage.getIconHeight(); 
+				wallHeight=height;
+			}
+
+			int side = sideCounter%2;
+			JLabel wall = new JLabel(wallImage);
+			wall.setSize(width, height);
+			wall.setLocation(side*(1200-width), y);
+			
+			
+			if(side==1){ //After adding the second side, it goes down another tile
+				y+=height;
+				rightWall.add(wall); //Reason for multiple wall lists it to minimize the "list" of walls that needs to be checked for collisions
+				leftWallHealth.add(255.0);
+			}else{
+				leftWall.add(wall);
+				rightWallHealth.add(255.0);
+
+			}
+			sideCounter++;
+			
+			
+			layerPane.add(wall, new Integer(5));
+			
+		}
+		//Adds health arraylists to health arraylist
+		wallHealth.add(leftWallHealth); //Left wall health at index 0
+		wallHealth.add(rightWallHealth); //Right wall health at index 1
+		
+		ArrayList<Double> topWallHealth = new ArrayList();
+		ArrayList<Double> bottomWallHealth = new ArrayList();
+		
+		int x=width; //x starts at the width of the image because the left and right walls act "in the corners" as the first parts of the top and bottom walls
+		
+		sideCounter=0;
+		while(x<layerPane.getWidth()-width){ //Same as the above reason
+			ParsedImageIcon wallImage = new ParsedImageIcon(".\\ZombieInvasion\\stoneWall.png");
+
+			int side = sideCounter%2;
+			JLabel wall = new JLabel(wallImage);
+			wall.setSize(width, height);
+			wall.setLocation(x, side*leftWall.get(leftWall.size()-1).getY()); //For tiling purposes. This wall will most likely be a "small slither"
+			sideCounter++;
+			
+			aestheticWall.add(wall); //Stores them to destroy them when the game ends
+			layerPane.add(wall, new Integer(5));
+			
+			if(side==1){ //After adding the second side, it goes down another tile
+				wall = new JLabel(wallImage);
+				wall.setSize(width, height);
+				wall.setLocation(x, side*leftWall.get(leftWall.size()-2).getY()); //This is the actual bottom wall
+				bottomWall.add(wall); //Reason for multiple wall lists it to minimize the "list" of walls that needs to be checked for collisions
+				layerPane.add(wall, new Integer(5));
+
+				x+=width;
+				
+				bottomWallHealth.add(255.0);
+
+			}else{
+				topWall.add(wall);
+				topWallHealth.add(255.0);
+			}		
+		}
+		wallHealth.add(topWallHealth); //Top wall health at index 2
+		wallHealth.add(bottomWallHealth); //Bottom wall health at index 3
+	}
+	public int getWallHitIndex(int coordinate, int wallDimension){
+		int index = coordinate/wallDimension;
+				
+		return index;	
+	}
+	public void decayWall(ArrayList<Double> wallHealth, JLabel wall, int indexOfWall){
+		double decayFactor=100;
+		
+		double wallHealthValue = wallHealth.get(indexOfWall);
+		wallHealthValue-=decayFactor;
+		if(wallHealthValue<0){
+			wallHealthValue=0;
+			
+			destroyWalls();
+			gameOver=true;
+		}
+		
+		ParsedImageIcon wallIcon = (ParsedImageIcon)wall.getIcon();
+		wallIcon.setAlpha((int)wallHealthValue);
+		wall.setIcon(wallIcon);
+		
+		wallHealth.set(indexOfWall, wallHealthValue);
+		
+		
+		
+		
+	}
+	public void destroyWalls(){
+		destroyWall(leftWall);
+		destroyWall(topWall);
+		destroyWall(rightWall);
+		destroyWall(bottomWall);
+		destroyWall(aestheticWall);
+
+		
+	}
+	public void destroyWall(ArrayList<JLabel> wall){
+		do{
+			layerPane.remove(wall.remove(0));
+		}while(wall.size()>=1);
+	}
+	
 	
 
 }
