@@ -3,7 +3,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -14,6 +16,8 @@ import javax.swing.ImageIcon;
 public class ParsedImageIcon extends ImageIcon{
 	
 	private String filePath;
+	private Image unrotatedImage;
+
 	
 	ParsedImageIcon(String pathOfFile, int width, int height){
 		filePath=pathOfFile;
@@ -21,6 +25,8 @@ public class ParsedImageIcon extends ImageIcon{
 		try {
 			image = ImageIO.read(new File(filePath));
 			image=image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+			unrotatedImage=image;
+
 			this.setImage(image);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -34,6 +40,8 @@ public class ParsedImageIcon extends ImageIcon{
 		try {
 			URL fileURL =new File(pathOfFile).toURI().toURL(); //this.... says to look in the src folder than down the path
 			ImageIcon image = new ImageIcon(fileURL);
+			unrotatedImage=image.getImage();
+
 			this.setImage(image.getImage());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -51,11 +59,14 @@ public class ParsedImageIcon extends ImageIcon{
 		Image image = this.getImage();
 		image=image.getScaledInstance(width, this.getIconHeight(), Image.SCALE_SMOOTH);
 		this.setImage(image);
+		unrotatedImage=image;
+
 	}
 	public void setHeight(int height){
 		Image image = this.getImage();
 		image=image.getScaledInstance(this.getIconWidth(), height, Image.SCALE_SMOOTH);
 		this.setImage(image);
+		unrotatedImage=image;
 	}
 	
 	public String getFilePath(){
@@ -100,5 +111,32 @@ public class ParsedImageIcon extends ImageIcon{
 			}
 		}
 		this.setImage(bufferedImage);
+	}
+	public Dimension setRotation(double angle){
+		angle=2.0*Math.PI-angle;
+		Image image = unrotatedImage;
+		ImageIcon unrotatedIcon = new ImageIcon(image);
+
+		
+		int width = unrotatedIcon.getIconWidth();
+		int height = unrotatedIcon.getIconHeight();
+
+		
+		//Creates a rotated buffered image with rotated versions of imageicon dimensions. Then paints the image icon on it.
+	    double sin = Math.abs(Math.sin(angle)); 
+	    double cos = Math.abs(Math.cos(angle));
+	    int rotatedWidth = (int)(width*cos+height*sin);
+	    int rotatedHeight = (int)(height * cos + width * sin);
+	    BufferedImage rotatedBuffer = new BufferedImage(rotatedWidth, rotatedHeight, Transparency.TRANSLUCENT);
+	    Graphics2D g = rotatedBuffer.createGraphics();
+	    g.translate((rotatedWidth - width) / 2, (rotatedHeight - height) / 2);
+	    g.rotate(angle, width / 2, height / 2);
+	    g.drawImage(image, 0, 0, null); //Draws rotated image on rotated bufferedImage
+	    g.dispose();
+	    
+	    this.setImage(rotatedBuffer);
+	    return new Dimension(rotatedWidth, rotatedHeight);
+		
+		
 	}
 }
