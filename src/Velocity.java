@@ -6,14 +6,14 @@ public class Velocity {
 	private int velocityY;
 	private Random random = new Random();
 	
-	public Velocity(int xVelocity, int yVelocity){
+	public Velocity(int xVelocity, int yVelocity, boolean notRandom){
 		velocityX = xVelocity;
 		velocityY = yVelocity;
 	}
-	public Velocity(){
+	public Velocity(int minVelocityValue, int maxVelocityValue){
 		//Magnitudes, not directions
-		int maxVelocity=20; 
-		int minVelocity=8;
+		int maxVelocity=maxVelocityValue; 
+		int minVelocity=minVelocityValue;
 		
 		velocityX = random.nextInt(maxVelocity-minVelocity) + minVelocity;
 		velocityY = random.nextInt(maxVelocity-minVelocity) + minVelocity;
