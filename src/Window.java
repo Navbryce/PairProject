@@ -94,7 +94,7 @@ public class Window {
 	}
 	
 	private void runSnake() {
-		snake = new Snake();
+		snake = new Snake(0);
 		//snake.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 		//snake.setLayout(new GridBagLayout());
 		frame.setContentPane(snake);

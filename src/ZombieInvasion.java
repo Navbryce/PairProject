@@ -25,6 +25,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
@@ -60,13 +61,20 @@ public class ZombieInvasion extends Game{
 	private ArrayList<ArrayList<Double>> wallHealth = new ArrayList();
 	private int wallWidth;
 	private int wallHeight;
-	private boolean gameOver=false;
+	private int gameOver=0;
+	private int numberOfZombiesToSpawn=0;
+	private boolean returnToMenu=false;
+	final Window window;
 
 
 
-	public ZombieInvasion(int difficulty){
+	public ZombieInvasion(Window mainWindow, int difficulty){
+		window=mainWindow; //Sets the mainWindow
+		
 		generateWeaponList();
 		equipWeapon(weaponList.get(0), 0);
+		
+		numberOfZombiesToSpawn=(difficulty+1)*15;
 		
 		layerPane = new JLayeredPane();
 		layerPane.setSize(1200, 720);
@@ -158,8 +166,9 @@ public class ZombieInvasion extends Game{
 		BufferedImage blankCursorImage = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(blankCursorImage, new Point(0, 0), "blank");
 		this.setCursor(blankCursor);
-        		
-		for(int elementCounter=0; elementCounter<(difficulty+1)*15; elementCounter++){
+		
+		int numberOfZombiesInWave=numberOfZombiesToSpawn;
+		for(int elementCounter=0; elementCounter<numberOfZombiesInWave; elementCounter++){
 			spawnZombie();
 		}
 		
@@ -170,6 +179,10 @@ public class ZombieInvasion extends Game{
 				timerCounter++;
 				double timerIntervalInSec = (double)timerInterval/1000.0;
 				double second = timerIntervalInSec * timerCounter; 
+				
+				if(gameOver!=0 && !returnToMenu){
+					gameOver();
+				}
 				
 				decay();
 				if(automaticFire!=-1 && ((timerCounter-automaticFire)%currentWeapon.getDelay()==0 || timerCounter-automaticFire<2)){ //%5 adds a delay
@@ -306,13 +319,13 @@ public class ZombieInvasion extends Game{
 		frame.pack();
 	}
 	public void spawnZombie(){
-		int maxVelocity=28;
+		int maxVelocity=20;
 		int minVelocity=10;
 		ParsedImageIcon zombie = new ParsedImageIcon(".\\ZombieInvasion\\zombie.png");
 		JLabel zombieLabel = new JLabel(zombie);
 		zombieLabel.setSize(zombie.getIconWidth(), zombie.getIconHeight());
 		
-
+		numberOfZombiesToSpawn--; //Keeps track of the number of zombies that NEED to be spawned. NOT THE NUMBER OF SPAWNED ZOMBIES OR LIVE ZOMBIES
 		
 		Velocity velocity = new Velocity(minVelocity, maxVelocity);
 		
@@ -355,7 +368,7 @@ public class ZombieInvasion extends Game{
 			int newX = (int)(((double)velocityX)*timerIntervalInSec*metersToPixel) + currentX;
 			int newY = (int)(((double)velocityY)* timerIntervalInSec * metersToPixel) + currentY;
 			
-			if(!gameOver){
+			if(gameOver!=-1){
 				if(newX<=wallWidth || newX>layerPane.getWidth()-wallWidth-zombieLabel.getWidth()){
 					int wallIndex = getWallHitIndex(newY, wallHeight);
 
@@ -415,8 +428,14 @@ public class ZombieInvasion extends Game{
 				}
 			}
 		}
+		
 		if(!hit){
 			bulletHole(x, y);
+		}else{
+			if(zombieLabels.size()==0 && numberOfZombiesToSpawn==0){ //Checks win conditions
+				
+				gameOver=1; 
+			}
 		}
 		
 	}
@@ -700,7 +719,7 @@ public class ZombieInvasion extends Game{
 		return index;	
 	}
 	public void decayWall(ArrayList<Double> wallHealth, JLabel wall, int indexOfWall){
-		double decayFactor=100;
+		double decayFactor=25;
 		
 		double wallHealthValue = wallHealth.get(indexOfWall);
 		wallHealthValue-=decayFactor;
@@ -708,7 +727,7 @@ public class ZombieInvasion extends Game{
 			wallHealthValue=0;
 			
 			destroyWalls();
-			gameOver=true;
+			gameOver=-1;
 		}
 		
 		ParsedImageIcon wallIcon = (ParsedImageIcon)wall.getIcon();
@@ -734,6 +753,33 @@ public class ZombieInvasion extends Game{
 		do{
 			layerPane.remove(wall.remove(0));
 		}while(wall.size()>=1);
+	}
+	public void gameOver(){
+		returnToMenu=true;
+		if(gameOver==-1){
+			reloadText.setForeground(Color.RED);
+			reloadText.setText("You lose. The zombies broke free.");
+		}else{
+			reloadText.setForeground(Color.GREEN);
+			reloadText.setText("The zombie hordes have been eliminated, and you have emerged Victorious!");
+			reloadText.setFont(new Font("Lucida Console", Font.BOLD, 25));
+
+		}
+		reloadText.setSize(reloadText.getPreferredSize());
+		reloadText.setLocation((int)(layerPane.getWidth()/2.0- reloadText.getWidth()/2.0), (int)(layerPane.getHeight()/2.0 - reloadText.getHeight()));	
+		reloadText.setVisible(true);
+		
+		int input = JOptionPane.showConfirmDialog(null,"Return to Menu?", "Return to Menu?", JOptionPane.YES_OPTION);
+		if (input == 0) {
+			this.setVisible(false);
+			window.refresh();
+			
+		} else{
+			this.setVisible(false);
+			window.refresh();
+
+		}
+
 	}
 	
 	

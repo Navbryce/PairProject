@@ -29,8 +29,12 @@ public class Hurdler extends JPanel{
     private Timer timer;
     private int width;
     private int height;
+	final Window window;
 
-    public Hurdler(){
+
+    public Hurdler(Window mainWindow, int difficulty){
+    	window=mainWindow;
+    	
         width=1200;
         height=720;
 
@@ -71,7 +75,7 @@ public class Hurdler extends JPanel{
         this.add(layeredPane);
 
         timerInterval=10; //Interval for the timer. The lower the number, the smoother the animations
-        initialSpeed=6;
+        initialSpeed=(difficulty*2)+6;
         speed=initialSpeed;
 
         ActionListener timerListener = new ActionListener(){
@@ -198,7 +202,7 @@ public class Hurdler extends JPanel{
         int randomNumber = random.nextInt(maxBound);
 
         int numberOfHurdles = hurdles.size();
-        int minimumSpaceBetweenHurdles = runnerLabel.getWidth() + hurdleWidth + 50; //aside from two hurdles place direclty next to eachother. + iconwidth because distance is measured from left corner to left corner
+        int minimumSpaceBetweenHurdles = runnerLabel.getWidth() + hurdleWidth + 100; //aside from two hurdles place direclty next to eachother. + iconwidth because distance is measured from left corner to left corner
         int locationOfMostRecentHurdle=-1;
         int locationOfSecondMostRecentHurdle=-12;
         if(numberOfHurdles>0){
@@ -249,20 +253,24 @@ public class Hurdler extends JPanel{
         endText.setLocation(getWidth()/2-endText.getWidth()/2, getHeight()/2-endText.getHeight()/2);
         layeredPane.add(endText, new Integer(4));
 
-        JOptionPane.showMessageDialog(this, "Continue Game");
-        layeredPane.remove(endText);
-        for(int hurdleCounter=0; hurdleCounter<hurdles.size(); hurdleCounter++){
-            layeredPane.remove(hurdles.get(hurdleCounter));
-        }
-        hurdles = new ArrayList();
-        timer.start();
+        JOptionPane.showMessageDialog(this, "Return to main menu");
+        
+		if (input == 0) {
+			this.setVisible(false);
+			window.refresh();
+			
+		} else{
+			this.setVisible(false);
+			window.refresh();
+
+		}
 
     }
 
     public static void main(String args[]){
         JFrame frame = new JFrame("Hurdler");
 
-        frame.add(new Hurdler());
+        frame.add(new Hurdler(0));
         frame.setVisible(true);
         frame.pack();
     }
