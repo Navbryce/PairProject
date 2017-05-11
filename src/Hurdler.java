@@ -11,7 +11,7 @@ import java.util.Random;
 /**
  * Created by Navbryce on 4/14/2017.
  */
-public class Hurdler extends JPanel{
+public class Hurdler extends Game {
     private JPanel mainPanel = this;
     private JLayeredPane layeredPane;
     private JLabel[] backgroundLabels;
@@ -30,6 +30,7 @@ public class Hurdler extends JPanel{
     private int width;
     private int height;
 	final Window window;
+	private ActionListener timerListener;
 
 
     public Hurdler(Window mainWindow, int difficulty){
@@ -78,7 +79,7 @@ public class Hurdler extends JPanel{
         initialSpeed=(difficulty*2)+6;
         speed=initialSpeed;
 
-        ActionListener timerListener = new ActionListener(){
+        timerListener = new ActionListener(){
             public void actionPerformed(ActionEvent event){
                 JLabel backgroundLabel1 = backgroundLabels[0];
                 JLabel backgroundLabel2 = backgroundLabels[1];
@@ -171,9 +172,6 @@ public class Hurdler extends JPanel{
         this.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "descend");
         this.getActionMap().put("descend", descend);
 
-        timer = new Timer(timerInterval, timerListener);
-        timer.setInitialDelay(0);
-        timer.start();
     }
     public void hurdles(){
         generateHurdle();
@@ -255,23 +253,19 @@ public class Hurdler extends JPanel{
 
         JOptionPane.showMessageDialog(this, "Return to main menu");
         
-		if (input == 0) {
 			this.setVisible(false);
 			window.refresh();
-			
-		} else{
-			this.setVisible(false);
-			window.refresh();
-
-		}
+		
 
     }
+	@Override
+	public boolean run() {
+		// TODO Auto-generated method stub
+		timer = new Timer(timerInterval, timerListener);
+        timer.setInitialDelay(0);
+        timer.start();
+        
+		return false;
+	}
 
-    public static void main(String args[]){
-        JFrame frame = new JFrame("Hurdler");
-
-        frame.add(new Hurdler(0));
-        frame.setVisible(true);
-        frame.pack();
-    }
 }
