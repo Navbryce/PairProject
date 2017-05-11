@@ -33,6 +33,7 @@ public class Window {
 			 	//g.drawImage((Image)background.getImage(), 0, 0, null);
 			//}
 		};
+		mainPanel.setPreferredSize(new Dimension(1200, 720));
 		mainPanel.setBackground(Color.black);
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 		mainPanel.setLayout(new GridBagLayout());
@@ -232,7 +233,6 @@ public class Window {
 		frame.setTitle("ARCADE");
 		frame.setContentPane(mainPanel);
 		frame.setResizable(false);
-		frame.setPreferredSize(new Dimension(1200,720));
 		frame.setVisible(true);
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
