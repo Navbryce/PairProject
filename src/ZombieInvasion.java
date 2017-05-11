@@ -65,10 +65,12 @@ public class ZombieInvasion extends Game{
 	private int numberOfZombiesToSpawn=0;
 	private boolean returnToMenu=false;
 	final Window window;
+	private ActionListener timerListener;
 
 
 
 	public ZombieInvasion(Window mainWindow, int difficulty){
+		//System.out.println("constructor");
 		window=mainWindow; //Sets the mainWindow
 		
 		generateWeaponList();
@@ -89,9 +91,7 @@ public class ZombieInvasion extends Game{
 		
 		layerPane.add(backgroundLabel, new Integer(0));
 		
-		this.add(layerPane);
-		this.setLayout(new GridLayout(0, 1, 0, 0));
-		this.setPreferredSize(layerPane.getSize());
+		
 		
 		ParsedImageIcon scope = new ParsedImageIcon(".\\ZombieInvasion\\scope.png");
 		scopeLabel = new JLabel(scope);
@@ -172,7 +172,7 @@ public class ZombieInvasion extends Game{
 			spawnZombie();
 		}
 		
-		ActionListener timerListener = new ActionListener(){
+		timerListener = new ActionListener(){
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -289,35 +289,27 @@ public class ZombieInvasion extends Game{
         
 
 
-        
-        
-		
+
 		timer = new Timer(timerInterval, timerListener);
+		
 		
 		layerPane.repaint();
 		layerPane.setVisible(true);
-
-
-
 		
 
+		this.add(layerPane);
+		this.setLayout(new GridLayout(0, 1, 0, 0));
+		this.setPreferredSize(layerPane.getSize());
 		
 	}
 	@Override
 	public boolean run() {
 		// TODO Auto-generated method stub
+		
 		timer.start();
 		return true;
 	}
-	public static void main(String args[]){
-		JFrame frame = new JFrame("Zombie Invasion Test"); //REMOVE FRAME BEFORE COMPLEETION
-		ZombieInvasion game = new ZombieInvasion(0);
-		frame.add(game);
-		frame.setVisible(true);
-		game.run();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.pack();
-	}
+	
 	public void spawnZombie(){
 		int maxVelocity=20;
 		int minVelocity=10;
@@ -769,16 +761,11 @@ public class ZombieInvasion extends Game{
 		reloadText.setLocation((int)(layerPane.getWidth()/2.0- reloadText.getWidth()/2.0), (int)(layerPane.getHeight()/2.0 - reloadText.getHeight()));	
 		reloadText.setVisible(true);
 		
-		int input = JOptionPane.showConfirmDialog(null,"Return to Menu?", "Return to Menu?", JOptionPane.YES_OPTION);
-		if (input == 0) {
+		JOptionPane.showMessageDialog(this,"Return to Menu?");
+		
 			this.setVisible(false);
 			window.refresh();
 			
-		} else{
-			this.setVisible(false);
-			window.refresh();
-
-		}
 
 	}
 	
