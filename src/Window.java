@@ -105,9 +105,9 @@ public class Window {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
 				// TODO Auto-generated method stub
-				int level = ((JComboBox) ev.getSource()).getSelectedIndex();
+				level = ((JComboBox) ev.getSource()).getSelectedIndex();
 				//select level #
-				System.out.println(level);
+				//System.out.println(level);
 			}
 			
 		});
